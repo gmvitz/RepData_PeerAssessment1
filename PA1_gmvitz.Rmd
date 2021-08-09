@@ -1,0 +1,62 @@
+---
+title: "Reproducible Research: Peer Assessment 1"
+output: 
+  html_document:
+    keep_md: true
+---
+
+
+## Loading and preprocessing the data
+```{r}
+d <- read.csv("data/activity.csv")
+
+library(dplyr)
+library(ggplot2)
+
+d$date <- as.Date(d$date, "%Y-%m-%d")
+
+d$steps[is.na(d$steps)] <- 0L
+
+head(d)
+```
+
+
+## What is mean total number of steps taken per day?
+
+```{r}
+d_sum <- d %>% dplyr::group_by(date) %>% 
+    dplyr::summarise(steps_per_day = sum(steps))
+
+hist(d_sum$steps_per_day)
+```
+
+```{r}
+d_mean_med <- d %>% dplyr::group_by(date) %>% 
+    dplyr::summarise(daily_mean = mean(steps, na.rm = TRUE),
+                     daily_med = median(steps))
+
+d_mean_med %>% knitr::kable(digits = 1)
+```
+
+
+## What is the average daily activity pattern?
+```{r}
+ave_int <- d %>% 
+    group_by(interval) %>% 
+    summarise(ave_steps = mean(steps)) %>% 
+    ungroup()
+
+ave_int %>% 
+    ggplot(aes(interval, ave_steps)) +
+        geom_line() +
+        geom_text(data = subset(ave_int, ave_steps == max(ave_steps)), 
+                  aes(label = paste("Max is", max(ave_int$ave_steps), "\n In interval", interval)))
+
+```
+
+
+## Imputing missing values
+
+
+
+## Are there differences in activity patterns between weekdays and weekends?
