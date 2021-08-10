@@ -15,8 +15,6 @@ library(ggplot2)
 
 d$date <- as.Date(d$date, "%Y-%m-%d")
 
-d$steps[is.na(d$steps)] <- 0L
-
 head(d)
 ```
 
@@ -38,12 +36,17 @@ d_mean_med <- d %>% dplyr::group_by(date) %>%
 d_mean_med %>% knitr::kable(digits = 1)
 ```
 
+```{r}
+# Mean/Median total steps per day
+summary(d_sum$steps_per_day)
+```
+
 
 ## What is the average daily activity pattern?
 ```{r}
 ave_int <- d %>% 
     group_by(interval) %>% 
-    summarise(ave_steps = mean(steps)) %>% 
+    summarise(ave_steps = mean(steps, na.rm = TRUE)) %>% 
     ungroup()
 
 ave_int %>% 
@@ -56,7 +59,45 @@ ave_int %>%
 
 
 ## Imputing missing values
+```{r}
+# NAs = 2304
+summary(d)
+```
+```{r}
+# NAs are converted to 0, no daily medians where larger than 0 above
+# Store in new drm_na variable
+drm_na <- d
+drm_na$steps[is.na(drm_na$steps)] <- 0L
 
+drm_na_sum <- drm_na %>% group_by(date) %>% 
+    summarise(daily_total = sum(steps))
+```
+
+
+The histogram distribution is more left skewed than when the NA values are removed.
+```{r}
+hist(drm_na_sum$daily_total)
+```
+
+```{r}
+summary(drm_na_sum$daily_total)
+```
+The mean and Median are lower when the NA entries are 0.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+```{r}
+plot_data <- drm_na %>% 
+    mutate(day = weekdays(date),
+           type_of_day = if_else(day %in% c("Sunday", "Saturday"), "Weekend", "Weekday")) %>% 
+    group_by(interval, type_of_day) %>% 
+    summarise(`Number of Steps` = sum(steps))
+
+
+
+plot_data %>% ggplot(aes(interval, `Number of Steps`)) +
+    geom_line(color = "blue") +
+    facet_wrap(~type_of_day, ncol = 1)
+```
+
