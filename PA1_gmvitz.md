@@ -224,7 +224,7 @@ plot_data <- drm_na %>%
     mutate(day = weekdays(date),
            type_of_day = if_else(day %in% c("Sunday", "Saturday"), "Weekend", "Weekday")) %>% 
     group_by(interval, type_of_day) %>% 
-    summarise(`Number of Steps` = sum(steps))
+    summarise(`Number of Steps` = mean(steps))
 ```
 
 ```
